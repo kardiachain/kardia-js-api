@@ -8,7 +8,7 @@ const sleep = ms => {
 
 const version = '0.0.1';
 
-const getApiPath = apiName => '/api/v1/';
+export const getApiPath = (apiName, urlLink) => `${urlLink}/api/v1/${apiName}`;
 
 const getMockData = apiName => ({
   data: 'mock'
@@ -20,7 +20,7 @@ export default urlLink => {
     baseLink = urlLink;
   };
   const request = async (payload, apiName) => {
-    const config = { ...payload, url: `${urlLink}${getApiPath(apiName)}` };
+    const config = { ...payload, url: getApiPath(apiName, urlLink) };
     if (isMock) {
       await sleep(1000);
       return getMockData(apiName);

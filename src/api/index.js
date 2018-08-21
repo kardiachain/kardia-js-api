@@ -39,6 +39,7 @@ export default provider => {
     clientVerion: () => defaultMethod(provider, 'web3_clientVersion'),
     coinBase: () => defaultMethod(provider, 'kai_coinbase'),
     isProposer: () => defaultMethod(provider, 'kai_proposer'),
+    perCount: () => defaultMethod(provider, 'net_peerCount', hexToNumber),
     votingPower: () => defaultMethod(provider, 'kai_voting_power', hexToNumber),
     blockNumber: () => defaultMethod(provider, 'kai_blockNumber', hexToNumber),
     blockByNumber: (blockNum, fullBlock = true) =>

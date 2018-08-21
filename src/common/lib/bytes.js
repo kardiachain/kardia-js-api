@@ -175,3 +175,26 @@ export {
   fromUint8Array,
   toUint8Array
 };
+
+export default {
+  random,
+  length,
+  concat,
+  flatten,
+  slice,
+  reverse,
+  pad,
+  padRight,
+  fromAscii,
+  toAscii,
+  fromString,
+  toString,
+  fromNumber,
+  toNumber,
+  fromNat,
+  toNat,
+  fromArray,
+  toArray,
+  fromUint8Array,
+  toUint8Array
+};

@@ -1,6 +1,7 @@
 import { decode, encode } from './lib/rlp';
 import { fromNat } from './lib/bytes';
 import { keccak256 } from './lib/hash';
+import { create } from './lib/account';
 import {
   fromPrivate,
   sign as signLib,
@@ -52,7 +53,6 @@ const sign = (
     fromNat(transaction.gas),
     transaction.to.toLowerCase(),
     fromNat(transaction.value),
-    fromNat('0x1'),
     transaction.data
   ]);
   var hash = keccak256(rlpEncoded);
@@ -61,11 +61,11 @@ const sign = (
   const decodeSign = decodeSignature(signature);
 
   var rawTx = decode(rlpEncoded)
-    .slice(0, 7)
+    .slice(0, 6)
     .concat(decodeSign);
-  rawTx[7] = makeEven(trimLeadingZero(decodeSign[1]));
-  rawTx[8] = makeEven(trimLeadingZero(decodeSign[2]));
-  rawTx[9] = makeEven(trimLeadingZero(decodeSign[0]));
+  rawTx[6] = makeEven(trimLeadingZero(decodeSign[1]));
+  rawTx[7] = makeEven(trimLeadingZero(decodeSign[2]));
+  rawTx[8] = makeEven(trimLeadingZero(decodeSign[0]));
   // console.log(rawTx);
 
   var rawTransaction = encode(rawTx);
@@ -85,19 +85,48 @@ const sign = (
 
 const recoverTx = rawTx => {
   var values = decode(rawTx);
-  var signature = encodeSignature([values[9], values[7], values[8]]);
+  var signature = encodeSignature([values[8], values[6], values[7]]);
   var signingData = values.slice(0, 7);
   var signingDataHex = encode(signingData);
   return recover(keccak256(signingDataHex), signature);
 };
 
-const txGenerator = (receiver, amount, nonce = '0x0') => ({
+/**
+ * create tx object
+ * @param  {address} receiver
+ * @param  {hexString} amount                   amount number should be present in hex.
+ * @param  {hexString} [nonce='0x0']     nounce number in hex
+ * @param  {hexString} [gasPrice='0xff']
+ * @param  {hexString} [gas='0xff']
+ * @param  {hexString} [data='0x']
+ * @return {Object}
+ */
+const txGenerator = (
+  receiver,
+  amount,
+  nonce = '0x0',
+  gasPrice = '0xff',
+  gas = '0xff',
+  data = '0x'
+) => ({
   nonce: nonce,
   to: receiver,
-  gasPrice: '0xff',
-  gas: '0xff',
+  gasPrice: gasPrice,
+  gas: gas,
   value: amount,
-  data: '0x'
+  data: data
 });
 
-export { sign, recoverTx, txGenerator };
+const createAccount = create;
+
+export { sign, recoverTx, txGenerator, createAccount };
+export {
+  isBN,
+  toBN,
+  isAddress,
+  utf8ToHex,
+  hexToUtf8,
+  hexToNumber,
+  hexToNumberString,
+  numberToHex
+} from './lib/utils';

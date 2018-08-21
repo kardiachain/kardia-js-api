@@ -1,8 +1,18 @@
 import kardiaTool from '../index';
 
 describe('kardiaTool', () => {
+  it('includes provider and common', () => {
+    const host = 'http://localhost';
+    expect(kardiaTool(host)).toEqual(
+      expect.objectContaining({
+        provider: expect.anything(),
+        common: expect.anything()
+      })
+    );
+  });
   it('is an object with common', () => {
-    expect(kardiaTool.common).toEqual(
+    const host = 'http://localhost';
+    expect(kardiaTool(host).common).toEqual(
       expect.objectContaining({
         createAccount: expect.any(Function),
         hexToNumber: expect.any(Function),

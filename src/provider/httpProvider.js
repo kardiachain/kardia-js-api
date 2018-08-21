@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const isMock = true;
+axios.defaults.headers.post['Content-Type'] = 'application/json';
+
+const isMock = false;
 
 const sleep = ms => {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -8,24 +10,30 @@ const sleep = ms => {
 
 const version = '0.0.1';
 
-export const getApiPath = (apiName, urlLink) => `${urlLink}/api/v1/${apiName}`;
+const getConfigPayload = (payload, id) => ({
+  jsonrpc: '2.0',
+  id,
+  ...payload
+});
 
 const getMockData = apiName => ({
   data: 'mock'
 });
 
 export default urlLink => {
+  let id = 1;
   let baseLink = urlLink;
   const updateBaseLink = urlLink => {
     baseLink = urlLink;
   };
-  const request = async (payload, apiName) => {
-    const config = { ...payload, url: getApiPath(apiName, urlLink) };
+  const request = async (payload, requestId) => {
+    const config = getConfigPayload(payload, requestId || id);
     if (isMock) {
       await sleep(1000);
       return getMockData(apiName);
     }
-    return await axios(config);
+    id++;
+    return await axios.post(urlLink, { ...config });
   };
   return {
     version,

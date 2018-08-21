@@ -1,0 +1,44 @@
+{
+  "name": "KardiaTool",
+  "version": "0.0.1",
+  "description": "Javascript library to interact with kardia chain",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src --out-dir=lib",
+    "jest:watch": "jest --watch"
+  },
+  "repository": "https://github.com/kardiachain/kardiaTool",
+  "bugs": {
+    "url": "https://github.com/kardiachain/kardiaTool/issues"
+  },
+  "author": "Phu Tang <phutanghong@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "node": true,
+            "browsers": [
+              "last 2 versions"
+            ]
+          }
+        }
+      ]
+    ]
+  },
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "jest": "^23.5.0"
+  },
+  "dependencies": {
+    "bn.js": "^4.11.8",
+    "elliptic": "^6.4.1",
+    "utf8": "^3.0.0"
+  }
+}

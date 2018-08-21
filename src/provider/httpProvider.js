@@ -6,7 +6,7 @@ const sleep = ms => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
-const verion = '0.0.1';
+const version = '0.0.1';
 
 const getApiPath = apiName => '/api/v1/';
 

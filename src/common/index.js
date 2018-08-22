@@ -2,6 +2,7 @@ import { decode, encode } from './lib/rlp';
 import { fromNat } from './lib/bytes';
 import { keccak256 } from './lib/hash';
 import { create } from './lib/account';
+import { isHexStrict, toHex } from './lib/utils';
 import {
   fromPrivate,
   sign as signLib,
@@ -106,11 +107,11 @@ const txGenerator = (
   gas = '0xff',
   data = '0x'
 ) => ({
-  nonce: nonce,
+  nonce: isHexStrict(nonce) ? nonce : toHex(nonce),
   to: receiver,
-  gasPrice: gasPrice,
-  gas: gas,
-  value: amount,
+  gasPrice: isHexStrict(gasPrice) ? gasPrice : toHex(gasPrice),
+  gas: isHexStrict(gas) ? gas : toHex(gas),
+  value: isHexStrict(amount) ? amount : toHex(amount),
   data: data
 });
 

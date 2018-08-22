@@ -1,4 +1,10 @@
-import { txGenerator, createAccount, sign, recoverTx } from '../index';
+import {
+  txGenerator,
+  createAccount,
+  sign,
+  recoverTx,
+  numberToHex
+} from '../index';
 
 describe('tx generator function', () => {
   it('is a function', () => {
@@ -8,7 +14,7 @@ describe('tx generator function', () => {
       gas: '0xff',
       gasPrice: '0xff',
       nonce: '0x0',
-      value: 1,
+      value: '0x1',
       to: '0x'
     });
   });
@@ -21,7 +27,7 @@ describe('createAccount function', () => {
       address: expect.any(String),
       privateKey: expect.any(String)
     });
-    const tx = txGenerator('0x', '0x10', '0x0', '0xff', '0xff', '0x');
+    const tx = txGenerator('0x', 100, '0x0', '0xff', '0xff', '0x');
     const rawtx = sign(tx, account.privateKey);
     expect(rawtx).toBeTruthy();
     const originalTx = recoverTx(rawtx.rawTransaction);

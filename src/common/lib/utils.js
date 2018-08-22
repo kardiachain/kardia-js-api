@@ -1,5 +1,49 @@
 import BN from 'bn.js';
 import utf8 from 'utf8';
+import numberToBN from 'number-to-bn';
+
+import { isString, isNumber, isBoolean, isObject } from 'lodash';
+
+/**
+ * Auto converts any given value into it's hex representation.
+ *
+ * And even stringifys objects before.
+ *
+ * @method toHex
+ * @param {String|Number|BN|Object} value
+ * @param {Boolean} returnType
+ * @return {String}
+ */
+export const toHex = (value, returnType = false) => {
+  /*jshint maxcomplexity: false */
+
+  if (isAddress(value)) {
+    return returnType
+      ? 'address'
+      : '0x' + value.toLowerCase().replace(/^0x/i, '');
+  }
+
+  if (isBoolean(value)) {
+    return returnType ? 'bool' : value ? '0x01' : '0x00';
+  }
+
+  if (isObject(value) && !isBigNumber(value) && !isBN(value)) {
+    return returnType ? 'string' : utf8ToHex(JSON.stringify(value));
+  }
+
+  // if its a negative number, pass it through numberToHex
+  if (isString(value)) {
+    if (value.indexOf('-0x') === 0 || value.indexOf('-0X') === 0) {
+      return returnType ? 'int256' : numberToHex(value);
+    } else if (value.indexOf('0x') === 0 || value.indexOf('0X') === 0) {
+      return returnType ? 'bytes' : value;
+    } else if (!isFinite(value)) {
+      return returnType ? 'string' : utf8ToHex(value);
+    }
+  }
+
+  return returnType ? (value < 0 ? 'int256' : 'uint256') : numberToHex(value);
+};
 /**
  * Returns true if object is BN, otherwise false
  *
@@ -20,7 +64,7 @@ export const isBN = object =>
  */
 export const toBN = number => {
   try {
-    return numberToBN.apply(null, arguments);
+    return numberToBN(number);
   } catch (e) {
     throw new Error(e + ' Given value: "' + number + '"');
   }
@@ -141,8 +185,8 @@ export const utf8ToHex = str => {
  * @param {String} hex to be checked
  * @returns {Boolean}
  */
-const isHexStrict = hex => {
-  return (_.isString(hex) || _.isNumber(hex)) && /^(-)?0x[0-9a-f]*$/i.test(hex);
+export const isHexStrict = hex => {
+  return (isString(hex) || isNumber(hex)) && /^(-)?0x[0-9a-f]*$/i.test(hex);
 };
 /**
  * Should be called to get utf8 from it's hex representation

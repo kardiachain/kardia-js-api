@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src --out-dir=lib --ignore '/__tests__/'",
+    "publish": "babel src --out-dir=lib --ignore '/__tests__/' && publish",
     "jest:watch": "jest --watch"
   },
   "repository": "https://github.com/kardiachain/kardiaTool",

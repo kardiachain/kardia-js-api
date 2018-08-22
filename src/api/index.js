@@ -84,7 +84,7 @@ export default provider => {
     coinBase: () => defaultMethod(provider, 'kai_coinbase'),
     isProposer: () => defaultMethod(provider, 'kai_proposer'),
     perCount: () => defaultMethod(provider, 'net_peerCount', hexToNumber),
-    votingPower: () => defaultMethod(provider, 'kai_voting_power', hexToNumber),
+    votingPower: () => defaultMethod(provider, 'kai_votingPower', hexToNumber),
     blockNumber: () => defaultMethod(provider, 'kai_blockNumber', hexToNumber),
     blockByNumber: (blockNum, fullTxs = false) =>
       getBlockNumber(provider, blockNumfullBlock, fullTxs),

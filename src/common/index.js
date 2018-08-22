@@ -29,7 +29,6 @@ const sign = (
   privateKey = '0xf7a3c3b95c4235d7afcf9cc19fafb8ce14c536f5dfac76dc285c7d8f2a376875'
 ) => {
   const account = fromPrivate(privateKey);
-  console.log(account);
   if (!tx.gas) {
     throw new Error('"gas" is missing');
   }
@@ -71,22 +70,20 @@ const sign = (
   var rawTransaction = encode(rawTx);
 
   var values = decode(rawTransaction);
-  console.log(hash);
   const result = {
     messageHash: hash,
-    r: trimLeadingZero(values[7]),
-    s: trimLeadingZero(values[8]),
-    v: trimLeadingZero(values[9]),
+    r: trimLeadingZero(values[6]),
+    s: trimLeadingZero(values[7]),
+    v: trimLeadingZero(values[8]),
     rawTransaction: rawTransaction
   };
-  console.log(result);
   return result;
 };
 
 const recoverTx = rawTx => {
   var values = decode(rawTx);
   var signature = encodeSignature([values[8], values[6], values[7]]);
-  var signingData = values.slice(0, 7);
+  var signingData = values.slice(0, 6);
   var signingDataHex = encode(signingData);
   return recover(keccak256(signingDataHex), signature);
 };

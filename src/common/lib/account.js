@@ -1,5 +1,5 @@
 import Bytes from './bytes';
-import Nat from './nat';
+import { fromString } from './nat';
 import elliptic from 'elliptic';
 import { keccak256, keccak256s } from './hash';
 
@@ -53,7 +53,7 @@ const makeSigner = addToV => (hash, privateKey) => {
     .keyFromPrivate(new Buffer(privateKey.slice(2), 'hex'))
     .sign(new Buffer(hash.slice(2), 'hex'), { canonical: true });
   return encodeSignature([
-    Nat.fromString(Bytes.fromNumber(addToV + signature.recoveryParam)),
+    fromString(Bytes.fromNumber(addToV + signature.recoveryParam)),
     Bytes.pad(32, Bytes.fromNat('0x' + signature.r.toString(16))),
     Bytes.pad(32, Bytes.fromNat('0x' + signature.s.toString(16)))
   ]);

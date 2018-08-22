@@ -27,6 +27,12 @@ describe('createAccount function', () => {
       address: expect.any(String),
       privateKey: expect.any(String)
     });
+  });
+});
+
+describe('sign and recover tx', () => {
+  it('signs and recovers correctly', () => {
+    const account = createAccount();
     const tx = txGenerator('0x', 100, '0x0', '0xff', '0xff', '0x');
     const rawtx = sign(tx, account.privateKey);
     expect(rawtx).toBeTruthy();

@@ -44,7 +44,7 @@ const parseResult = (result, customFormat) => {
       customFormat
     )(result);
   } else {
-    throw new Error(result);
+    throw new Error(JSON.stringify(result.data));
   }
 };
 

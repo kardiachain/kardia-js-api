@@ -3597,12 +3597,6 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-var@^0.3.2:
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/var/-/var-0.3.2.tgz#d41a6ef2944bb9f87d3fe16d3ff1c1380298b55f"
-  dependencies:
-    lodash "^4.17.4"
-
 verror@1.10.0:
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/verror/-/verror-1.10.0.tgz#3a105ca17053af55d6e270c1f8288682e18da400"

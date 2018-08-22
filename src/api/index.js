@@ -2,28 +2,42 @@ import { get, flow, isNumber } from 'lodash/fp';
 import { hexToNumber, numberToHex } from '../common';
 
 const always = value => value;
-const defaultMethod = async (provider, methodName, customFormat = always) => {
+const defaultMethod = async (
+  provider,
+  methodName,
+  customFormat = always,
+  params = []
+) => {
   const payload = {
-    method: methodName
+    method: methodName,
+    params
   };
   const result = await provider.request(payload);
   return parseResult(result, customFormat);
 };
 
-const getBlockNumber = async (blockNumber, fullBlock = true) => {
+const getBlockNumber = async (provider, blockNumber, fullTxs = false) => {
   const blockNumberHash = isNumber(blockNumber)
     ? numberToHex(blockNumber)
     : blockNumber;
   const payload = {
-    method: 'eth_getBlockByNumber',
-    params: [blockNumberHash, fullBlock]
+    method: 'kai_getBlockByNumber',
+    params: [blockNumberHash, fullTxs]
+  };
+  const result = await provider.request(payload);
+  return parseResult(result, always);
+};
+
+const getBlockByHash = async (provider, blockHash, fullTxs = false) => {
+  const payload = {
+    method: 'kai_getBlockByHash',
+    params: [blockHash, fullTxs]
   };
   const result = await provider.request(payload);
   return parseResult(result, always);
 };
 
 const parseResult = (result, customFormat) => {
-  console.log(customFormat(get('data.result', result)));
   if (get('data.result', result)) {
     return flow(
       get('data.result'),
@@ -34,6 +48,36 @@ const parseResult = (result, customFormat) => {
   }
 };
 
+const sendSignedTx = async (
+  provider,
+  rawTx,
+  waitUntilMine = false,
+  timeout = 30000
+) => {
+  const txHash = defaultMethod(provider, 'kai_sendRawTransaction', always, [
+    rawTx
+  ]);
+  if (waitUntilMine === false) {
+    return txHash;
+  }
+
+  const breakTimeout = Date.now() + timeout;
+  while (Date.now < breakTimeout) {
+    const receipt = await defaultMethod(
+      provider,
+      'kai_getTransactionReceipt',
+      always,
+      [rawTx]
+    );
+    if (receipt) {
+      return receipt;
+    } else {
+      await sleep(1000);
+    }
+  }
+  throw new Error(`Timeout: cannot get receipt after ${timeout}ms`);
+};
+
 export default provider => {
   return {
     clientVerion: () => defaultMethod(provider, 'web3_clientVersion'),
@@ -42,7 +86,23 @@ export default provider => {
     perCount: () => defaultMethod(provider, 'net_peerCount', hexToNumber),
     votingPower: () => defaultMethod(provider, 'kai_voting_power', hexToNumber),
     blockNumber: () => defaultMethod(provider, 'kai_blockNumber', hexToNumber),
-    blockByNumber: (blockNum, fullBlock = true) =>
-      getBlockNumber(blockNumfullBlock)
+    blockByNumber: (blockNum, fullTxs = false) =>
+      getBlockNumber(provider, blockNumfullBlock, fullTxs),
+    blockByHash: () => (blockHash, fullTxs = false) =>
+      getBlockByHash(provider, blockHash, fullTxs),
+    transactionCount: (address, blockParam = 'latest') =>
+      defaultMethod(provider, 'kai_getTransactionCount', hexToNumber, [
+        address,
+        blockParam
+      ]),
+    sendSignedTransaction: (rawTx, waitUntilMine = false, timeout) =>
+      sendSignedTx(provider, rawTx, (waitUntilMine = false), timeout),
+    transactionReceipt: txHash =>
+      defaultMethod(provider, 'kai_getTransactionReceipt', always, [txHash]),
+    balance: (address, blockParam = 'latest') =>
+      defaultMethod(provider, 'kai_getBalance', hexToNumber, [
+        address,
+        blockParam
+      ])
   };
 };

@@ -4,7 +4,7 @@
   "description": "Javascript library to interact with kardia chain",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel src --out-dir=lib",
+    "build": "babel src --out-dir=lib --ignore '/__tests__/'",
     "jest:watch": "jest --watch"
   },
   "repository": "https://github.com/kardiachain/kardiaTool",

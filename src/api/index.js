@@ -1,4 +1,4 @@
-import { get, flow, isNumber } from 'lodash/fp';
+import { get, flow, isNumber, isUndefined } from 'lodash/fp';
 import { hexToNumber, numberToHex } from '../common';
 
 const always = value => value;
@@ -16,29 +16,26 @@ const defaultMethod = async (
   return parseResult(result, customFormat);
 };
 
-const getBlockNumber = async (provider, blockNumber, fullTxs = false) => {
-  const blockNumberHash = isNumber(blockNumber)
-    ? numberToHex(blockNumber)
-    : blockNumber;
+const getBlockNumber = async (provider, blockNumber) => {
   const payload = {
     method: 'kai_getBlockByNumber',
-    params: [blockNumberHash, fullTxs]
+    params: [blockNumber]
   };
   const result = await provider.request(payload);
   return parseResult(result, always);
 };
 
-const getBlockByHash = async (provider, blockHash, fullTxs = false) => {
+const getBlockByHash = async (provider, blockHash) => {
   const payload = {
     method: 'kai_getBlockByHash',
-    params: [blockHash, fullTxs]
+    params: [blockHash]
   };
   const result = await provider.request(payload);
   return parseResult(result, always);
 };
 
 const parseResult = (result, customFormat) => {
-  if (get('data.result', result)) {
+  if (!isUndefined(get('data.result', result))) {
     return flow(
       get('data.result'),
       customFormat
@@ -54,20 +51,24 @@ const sendSignedTx = async (
   waitUntilMine = false,
   timeout = 30000
 ) => {
-  const txHash = defaultMethod(provider, 'kai_sendRawTransaction', always, [
-    rawTx
-  ]);
+  const txHash = await defaultMethod(
+    provider,
+    'tx_sendRawTransaction',
+    always,
+    [rawTx]
+  );
+  const submittedHash = parseResult(txHash, always);
   if (waitUntilMine === false) {
-    return txHash;
+    return submittedHash;
   }
 
   const breakTimeout = Date.now() + timeout;
   while (Date.now < breakTimeout) {
     const receipt = await defaultMethod(
       provider,
-      'kai_getTransactionReceipt',
+      'tx_getTransactionReceipt',
       always,
-      [rawTx]
+      [submittedHash]
     );
     if (receipt) {
       return receipt;
@@ -80,16 +81,14 @@ const sendSignedTx = async (
 
 export default provider => {
   return {
-    clientVerion: () => defaultMethod(provider, 'web3_clientVersion'),
-    coinBase: () => defaultMethod(provider, 'kai_coinbase'),
-    isProposer: () => defaultMethod(provider, 'kai_proposer'),
-    perCount: () => defaultMethod(provider, 'net_peerCount', hexToNumber),
-    votingPower: () => defaultMethod(provider, 'kai_votingPower', hexToNumber),
-    blockNumber: () => defaultMethod(provider, 'kai_blockNumber', hexToNumber),
-    blockByNumber: (blockNum, fullTxs = false) =>
-      getBlockNumber(provider, blockNumfullBlock, fullTxs),
-    blockByHash: () => (blockHash, fullTxs = false) =>
-      getBlockByHash(provider, blockHash, fullTxs),
+    clientVerion: () => defaultMethod(provider, 'node_nodeName'),
+    // isProposer: () => defaultMethod(provider, 'kai_proposer'),
+    peerCount: () => defaultMethod(provider, 'node_peersCount'),
+    votingPower: () => defaultMethod(provider, 'kai_votingPower'),
+    blockNumber: () => defaultMethod(provider, 'kai_blockNumber'),
+    pendingTransaction: () => defaultMethod(provider, 'tx_pendingTransactions'),
+    blockByNumber: blockNum => getBlockNumber(provider, blockNum),
+    blockByHash: blockHash => getBlockByHash(provider, blockHash),
     transactionCount: (address, blockParam = 'latest') =>
       defaultMethod(provider, 'kai_getTransactionCount', hexToNumber, [
         address,
@@ -97,12 +96,11 @@ export default provider => {
       ]),
     sendSignedTransaction: (rawTx, waitUntilMine = false, timeout) =>
       sendSignedTx(provider, rawTx, (waitUntilMine = false), timeout),
+    transactionByHash: txHash =>
+      defaultMethod(provider, 'tx_getTransaction', always, [txHash]),
     transactionReceipt: txHash =>
-      defaultMethod(provider, 'kai_getTransactionReceipt', always, [txHash]),
-    balance: (address, blockParam = 'latest') =>
-      defaultMethod(provider, 'kai_getBalance', hexToNumber, [
-        address,
-        blockParam
-      ])
+      defaultMethod(provider, 'tx_getTransactionReceipt', always, [txHash]),
+    balance: address =>
+      defaultMethod(provider, 'account_balance', always, [address])
   };
 };

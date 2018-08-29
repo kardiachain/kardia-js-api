@@ -100,7 +100,11 @@ export default provider => {
       defaultMethod(provider, 'tx_getTransaction', always, [txHash]),
     transactionReceipt: txHash =>
       defaultMethod(provider, 'tx_getTransactionReceipt', always, [txHash]),
-    balance: address =>
-      defaultMethod(provider, 'account_balance', always, [address])
+    balance: (address, blockHash = '', blockHeight = -1) =>
+      defaultMethod(provider, 'account_balance', always, [
+        address,
+        blockHash,
+        blockHeight
+      ])
   };
 };

@@ -60,12 +60,10 @@ const sign = (
   const signature = signLib(hash, privateKey);
   const decodeSign = decodeSignature(signature);
 
-  var rawTx = decode(rlpEncoded)
-    .slice(0, 6)
-    .concat(decodeSign);
-  rawTx[6] = makeEven(trimLeadingZero(decodeSign[1]));
-  rawTx[7] = makeEven(trimLeadingZero(decodeSign[2]));
-  rawTx[8] = makeEven(trimLeadingZero(decodeSign[0]));
+  var rawTx = decode(rlpEncoded).concat(decodeSign);
+  rawTx[6] = makeEven(trimLeadingZero(decodeSign[0]));
+  rawTx[7] = makeEven(trimLeadingZero(decodeSign[1]));
+  rawTx[8] = makeEven(trimLeadingZero(decodeSign[2]));
   // console.log(rawTx);
 
   var rawTransaction = encode(rawTx);
@@ -73,9 +71,9 @@ const sign = (
   var values = decode(rawTransaction);
   const result = {
     messageHash: hash,
-    r: trimLeadingZero(values[6]),
-    s: trimLeadingZero(values[7]),
-    v: trimLeadingZero(values[8]),
+    v: trimLeadingZero(values[6]),
+    r: trimLeadingZero(values[7]),
+    s: trimLeadingZero(values[8]),
     rawTransaction: rawTransaction
   };
   return result;
@@ -83,7 +81,7 @@ const sign = (
 
 const recoverTx = rawTx => {
   var values = decode(rawTx);
-  var signature = encodeSignature([values[8], values[6], values[7]]);
+  var signature = encodeSignature([values[6], values[7], values[8]]);
   var signingData = values.slice(0, 6);
   var signingDataHex = encode(signingData);
   return recover(keccak256(signingDataHex), signature);
@@ -105,7 +103,7 @@ const txGenerator = (
   nonce = '0x0',
   gasPrice = '0xff',
   gas = '0xff',
-  data = '0x'
+  data = '0x5544'
 ) => ({
   nonce: isHexStrict(nonce) ? nonce : toHex(nonce),
   to: receiver,

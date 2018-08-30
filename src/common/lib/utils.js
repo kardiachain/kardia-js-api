@@ -256,6 +256,18 @@ export const hexToNumberString = value => {
 };
 
 /**
+ * Returns true if object is BigNumber, otherwise false
+ *
+ * @method isBigNumber
+ * @param {Object}
+ * @return {Boolean}
+ */
+const isBigNumber = object =>
+  object &&
+  (object instanceof BN ||
+    (object.constructor && object.constructor.name === 'BigNumber'));
+
+/**
  * Converts value to it's hex representation
  *
  * @method numberToHex

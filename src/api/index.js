@@ -105,6 +105,8 @@ export default provider => {
         address,
         blockHash,
         blockHeight
-      ])
+      ]),
+    currentPower: () => defaultMethod(provider, 'kai_validator'),
+    validatorList: () => defaultMethod(provider, 'kai_validators')
   };
 };

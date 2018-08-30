@@ -57,10 +57,10 @@ const sendSignedTx = async (
     always,
     [rawTx]
   );
-  const submittedHash = parseResult(txHash, always);
   if (waitUntilMine === false) {
-    return submittedHash;
+    return txHash;
   }
+  const submittedHash = txHash;
 
   const breakTimeout = Date.now() + timeout;
   while (Date.now < breakTimeout) {

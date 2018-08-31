@@ -29,4 +29,9 @@ describe('kardiaTool', () => {
       })
     );
   });
+  it('test address validate', () => {
+    const address = '0x4C789cF0F4BEC40F315987185dF6F87EEC6447BA';
+    const host = 'http://localhost';
+    expect(kardiaTool(host).common.isAddress(address)).toBe(true);
+  });
 });

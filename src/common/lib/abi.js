@@ -44,7 +44,6 @@ const methodData = (method, params) => {
   let encodedParams = params.map((param, i) =>
     encode(method.inputs[i].type, param)
   );
-  console.log(encodedParams);
   var headBlock = '0x';
   let dataBlock = '0x';
   for (var i = 0; i < encodedParams.length; ++i) {

@@ -1,10 +1,10 @@
-const Hash = require('./hash');
-const Bytes = require('./bytes');
-const Desubits = require('./desubits');
+import { keccak256 } from './hash';
+import Bytes from './bytes';
+import { fromBytes, toBytes as desubitsToBytes } from './desubits';
 
 // Bytes -> Bytes
 const bytesAddChecksum = bytes => {
-  const hash = Hash.keccak256(bytes);
+  const hash = keccak256(bytes);
   const sum = Bytes.slice(0, 1, hash);
   return Bytes.concat(bytes, sum);
 };
@@ -19,7 +19,7 @@ const bytesChecksum = bytes => {
 // () ~> Passphrase
 const create = () => {
   const bytes = bytesAddChecksum(Bytes.random(11));
-  const seed = Desubits.fromBytes(bytes);
+  const seed = fromBytes(bytes);
   const passphrase = seed.replace(/([a-z]{8})/g, '$1 ');
   return passphrase;
 };
@@ -27,7 +27,7 @@ const create = () => {
 // Passphrase -> Bytes
 const toBytes = passphrase => {
   const seed = passphrase.replace(/ /g, '');
-  const bytes = Desubits.toBytes(passphrase);
+  const bytes = desubitsToBytes(passphrase);
   return bytes;
 };
 
@@ -36,7 +36,7 @@ const checksum = passphrase => bytesChecksum(toBytes(passphrase));
 
 // Passphrase -> Bytes
 const toMasterKey = passphrase => {
-  let hash = Hash.keccak256;
+  let hash = keccak256;
   let bytes = toBytes(passphrase);
   for (let i = 0, l = Math.pow(2, 12); i < l; ++i) bytes = hash(bytes);
   return bytes;

@@ -1,4 +1,4 @@
-import { get, flow, isNumber, isUndefined } from 'lodash/fp';
+import { get, flow, isNumber, isUndefined, isEmpty } from 'lodash/fp';
 import { hexToNumber, numberToHex } from '../common';
 
 const always = value => value;
@@ -41,6 +41,9 @@ const parseResult = (result, customFormat) => {
       customFormat
     )(result);
   } else {
+    if (isEmpty(result.data)) {
+      throw new Error('Empty Response');
+    }
     throw new Error(JSON.stringify(result.data));
   }
 };
@@ -82,7 +85,6 @@ const sendSignedTx = async (
 export default provider => {
   return {
     clientVerion: () => defaultMethod(provider, 'node_nodeName'),
-    // isProposer: () => defaultMethod(provider, 'kai_proposer'),
     peerCount: () => defaultMethod(provider, 'node_peersCount'),
     votingPower: () => defaultMethod(provider, 'kai_votingPower'),
     blockNumber: () => defaultMethod(provider, 'kai_blockNumber'),

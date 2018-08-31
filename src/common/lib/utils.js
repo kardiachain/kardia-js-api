@@ -1,6 +1,7 @@
 import BN from 'bn.js';
 import utf8 from 'utf8';
 import numberToBN from 'number-to-bn';
+import { keccak256 } from './hash';
 
 import { isString, isNumber, isBoolean, isObject } from 'lodash';
 
@@ -135,7 +136,7 @@ const sha3 = value => {
     value = hexToBytes(value);
   }
 
-  var returnValue = Hash.keccak256(value); // jshint ignore:line
+  var returnValue = keccak256(value); // jshint ignore:line
 
   if (returnValue === SHA3_NULL_S) {
     return null;

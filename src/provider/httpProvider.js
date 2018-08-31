@@ -38,6 +38,8 @@ export default urlLink => {
   return {
     version,
     request,
-    updateBaseLink
+    updateBaseLink,
+    type: 'httpProvider',
+    baseLink
   };
 };

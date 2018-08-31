@@ -30,9 +30,30 @@ const encode = (type, value) => {
 };
 
 const isDynamic = type => {
-  if (type === 'bytes') return true;
+  if (type === 'bytes' || type === 'string') return true;
   if (isArray(type)) return true;
   return false;
+};
+
+const deployData = (bytecode, method, params) => {
+  let encodedParams = params.map((param, i) =>
+    encode(method.inputs[i].type, param)
+  );
+  var headBlock = '0x';
+  let dataBlock = '0x';
+  for (var i = 0; i < encodedParams.length; ++i) {
+    if (encodedParams[i].dynamic) {
+      var dataLoc = encodedParams.length * 32 + Bytes.length(dataBlock);
+      headBlock = Bytes.concat(
+        headBlock,
+        Bytes.pad(32, Nat.fromNumber(dataLoc))
+      );
+      dataBlock = Bytes.concat(dataBlock, encodedParams[i].data);
+    } else {
+      headBlock = Bytes.concat(headBlock, encodedParams[i].data);
+    }
+  }
+  return Bytes.flatten([bytecode, headBlock, dataBlock]);
 };
 
 // (method : Method), [JSType(method.inputs[i].type)] -> Bytes
@@ -95,12 +116,8 @@ const encodeSingle = (type, arg) => {
       result = length;
     }
     for (i in arg) {
-      // data = encodeSingle(type, arg[i]).slice(0, 1);
-      // ret.push(encodeSingle(type, arg[i]));
-      console.log(encodeSingle(type, arg[i]));
       result = result + encodeSingle(type, arg[i]).replace('0x', '');
     }
-    console.log(result);
     return result;
   } else if (type === 'bytes') {
     const length = Bytes.length(arg);
@@ -221,4 +238,4 @@ function isHexPrefixed(str) {
 const stripHexPrefix = str => (isHexPrefixed(str) ? str.slice(2) : str);
 const zeros = bytes => Buffer.allocUnsafe(bytes).fill(0);
 
-export { encode, methodData };
+export { encode, methodData, deployData };

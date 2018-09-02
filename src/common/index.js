@@ -120,9 +120,11 @@ export {
   isBN,
   toBN,
   isAddress,
+  isHexStrict,
   utf8ToHex,
   hexToUtf8,
   hexToNumber,
   hexToNumberString,
-  numberToHex
+  numberToHex,
+  toHex
 } from './lib/utils';

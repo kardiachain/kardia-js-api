@@ -109,6 +109,8 @@ export default provider => {
         blockHeight
       ]),
     currentPower: () => defaultMethod(provider, 'kai_validator'),
-    validatorList: () => defaultMethod(provider, 'kai_validators')
+    validatorList: () => defaultMethod(provider, 'kai_validators'),
+    accountNonce: address =>
+      defaultMethod(provider, 'account_nonce', always, [address])
   };
 };

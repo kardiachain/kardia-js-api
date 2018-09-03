@@ -1,7 +1,8 @@
 import httpProvider from '../../provider/httpProvider';
 import Api from '../index';
 
-describe('api test', () => {
+// this one only use to interact with development chain, not use for testing
+describe.skip('api test', () => {
   it('work success', async () => {
     const api = Api(httpProvider('http://localhost:8545'));
     const result = await api.blockByHash(

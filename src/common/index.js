@@ -44,7 +44,7 @@ const sign = (
     gas: tx.gas,
     to: '0x' + tx.to.toLowerCase().replace('0x', ''),
     value: tx.value,
-    data: tx.data
+    data: '0x' + tx.data.toLowerCase().replace('0x', '')
   };
 
   var rlpEncoded = encode([
@@ -103,7 +103,7 @@ const txGenerator = (
   nonce = '0x0',
   gasPrice = '0xff',
   gas = '0xff',
-  data = '0x5544'
+  data = '0x'
 ) => ({
   nonce: isHexStrict(nonce) ? nonce : toHex(nonce),
   to: receiver,

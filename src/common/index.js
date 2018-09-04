@@ -98,7 +98,7 @@ const recoverTx = rawTx => {
  * @return {Object}
  */
 const txGenerator = (
-  receiver,
+  receiver = '0x',
   amount,
   nonce = '0x0',
   gasPrice = '0xff',

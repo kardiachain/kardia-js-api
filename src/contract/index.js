@@ -1,12 +1,12 @@
-import { find, replace, get } from 'lodash';
+import { find, replace, get, map } from 'lodash';
 import { deployData, methodData } from '../common/lib/abi';
 import { fromPrivate } from '../common/lib/account';
-import { txGenerator, sign } from '../common';
+import { txGenerator, sign, toHex, isHexStrict } from '../common';
 import Api from '../api';
 
 const findFunctionFromAbi = (abi, type = 'function', name = '') => {
   if (type !== 'constructor') {
-    return find(abi, item => item.type === type && type.name === name);
+    return find(abi, item => item.type === type && item.name === name);
   }
   return find(abi, item => item.type === type);
 };
@@ -14,7 +14,14 @@ const findFunctionFromAbi = (abi, type = 'function', name = '') => {
 const deployContract = (provider, bytecode = '0x', abi = [], params) => {
   const constructorAbi = findFunctionFromAbi(abi, 'constructor');
   const decorBycode = '0x' + replace(bytecode, '0x', '');
-  const data = deployData(bytecode, constructorAbi, params);
+  const paramsDecorate = map(params, param => {
+    if (isHexStrict(param)) {
+      return param;
+    } else {
+      return toHex(param);
+    }
+  });
+  const data = deployData(decorBycode, constructorAbi, paramsDecorate);
   return {
     txData: () => data,
     send: async (privateKey, txPayload = {}) => {
@@ -25,7 +32,7 @@ const deployContract = (provider, bytecode = '0x', abi = [], params) => {
       const gas = '0xff';
       const gasPrice = '0xff';
       const tx = txGenerator(
-        null,
+        '0x',
         get(txPayload, 'amount', 0),
         get(txPayload, 'nonce', accountNonce),
         get(txPayload, 'gasPrice', gasPrice),
@@ -33,13 +40,16 @@ const deployContract = (provider, bytecode = '0x', abi = [], params) => {
         data
       );
       const signedTx = sign(tx, privateKey);
-      api.sendSignedTransaction(signedTx.rawTransaction);
+      const result = await api.sendSignedTransaction(signedTx.rawTransaction);
+      console.log(result);
+      return result;
     }
   };
 };
 
 const invokeContract = (provider, abi, name, params) => {
   const functionFromAbi = findFunctionFromAbi(abi, 'function', name);
+  console.log(abi);
   const data = methodData(functionFromAbi, params);
   return {
     txData: () => data,
@@ -48,7 +58,7 @@ const invokeContract = (provider, abi, name, params) => {
       const senderAccount = fromPrivate(privateKey);
       const accountNonce = await api.accountNonce(senderAccount.address);
       //TODO call estimate gas if need
-      const gas = '0xff';
+      const gas = 5000;
       const gasPrice = '0xff';
       const tx = txGenerator(
         contractAddress,
@@ -59,7 +69,21 @@ const invokeContract = (provider, abi, name, params) => {
         data
       );
       const signedTx = sign(tx, privateKey);
-      api.sendSignedTransaction(signedTx.rawTransaction);
+      const result = await api.sendSignedTransaction(signedTx.rawTransaction);
+      return result;
+    },
+    call: async (sender, contractAddress, txPayload = {}) => {
+      const api = Api(provider);
+      const callObject = {
+        from: sender,
+        to: contractAddress,
+        data: data,
+        value: get(txPayload, 'amount', 0),
+        gasPrice: get(txPayload, 'gasPrice', 0),
+        gas: get(txPayload, 'gas', 0)
+      };
+      const result = await api.callSmartContract(callObject);
+      return result;
     }
   };
 };

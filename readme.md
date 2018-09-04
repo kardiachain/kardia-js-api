@@ -1,4 +1,4 @@
-# Welcome to kardiaTool
+# Welcome to Kardia Javascript API
 
 ---
 

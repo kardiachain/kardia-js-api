@@ -36,21 +36,23 @@ const isDynamic = type => {
 };
 
 const deployData = (bytecode, method, params) => {
-  let encodedParams = params.map((param, i) =>
-    encode(method.inputs[i].type, param)
-  );
   var headBlock = '0x';
   let dataBlock = '0x';
-  for (var i = 0; i < encodedParams.length; ++i) {
-    if (encodedParams[i].dynamic) {
-      var dataLoc = encodedParams.length * 32 + Bytes.length(dataBlock);
-      headBlock = Bytes.concat(
-        headBlock,
-        Bytes.pad(32, Nat.fromNumber(dataLoc))
-      );
-      dataBlock = Bytes.concat(dataBlock, encodedParams[i].data);
-    } else {
-      headBlock = Bytes.concat(headBlock, encodedParams[i].data);
+  if (params && method) {
+    let encodedParams = params.map((param, i) =>
+      encode(method.inputs[i].type, param)
+    );
+    for (var i = 0; i < encodedParams.length; ++i) {
+      if (encodedParams[i].dynamic) {
+        var dataLoc = encodedParams.length * 32 + Bytes.length(dataBlock);
+        headBlock = Bytes.concat(
+          headBlock,
+          Bytes.pad(32, Nat.fromNumber(dataLoc))
+        );
+        dataBlock = Bytes.concat(dataBlock, encodedParams[i].data);
+      } else {
+        headBlock = Bytes.concat(headBlock, encodedParams[i].data);
+      }
     }
   }
   return Bytes.flatten([bytecode, headBlock, dataBlock]);

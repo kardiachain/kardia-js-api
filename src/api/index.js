@@ -52,7 +52,7 @@ const sendSignedTx = async (
   provider,
   rawTx,
   waitUntilMine = false,
-  timeout = 30000
+  timeout = 60000
 ) => {
   const txHash = await defaultMethod(
     provider,
@@ -67,12 +67,9 @@ const sendSignedTx = async (
 
   const breakTimeout = Date.now() + timeout;
   while (Date.now < breakTimeout) {
-    const receipt = await defaultMethod(
-      provider,
-      'tx_getTransactionReceipt',
-      always,
-      [submittedHash]
-    );
+    const receipt = await defaultMethod(provider, 'tx_getTransaction', always, [
+      submittedHash
+    ]);
     if (receipt) {
       return receipt;
     } else {

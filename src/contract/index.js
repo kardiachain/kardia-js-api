@@ -41,7 +41,10 @@ const deployContract = (provider, bytecode = '0x', abi = [], params) => {
         data
       );
       const signedTx = sign(tx, privateKey);
-      const result = await api.sendSignedTransaction(signedTx.rawTransaction);
+      const result = await api.sendSignedTransaction(
+        signedTx.rawTransaction,
+        true
+      );
       console.log(result);
       return result;
     }
@@ -69,7 +72,10 @@ const invokeContract = (provider, abi, name, params) => {
         data
       );
       const signedTx = sign(tx, privateKey);
-      const result = await api.sendSignedTransaction(signedTx.rawTransaction);
+      const result = await api.sendSignedTransaction(
+        signedTx.rawTransaction,
+        true
+      );
       return result;
     },
     call: async (sender, contractAddress, txPayload = {}) => {

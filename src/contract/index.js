@@ -1,4 +1,5 @@
 import { find, replace, get, map } from 'lodash';
+import abiJs from 'ethereumjs-abi';
 import { deployData, methodData } from '../common/lib/abi';
 import { fromPrivate } from '../common/lib/account';
 import { txGenerator, sign, toHex, isHexStrict } from '../common';
@@ -49,7 +50,6 @@ const deployContract = (provider, bytecode = '0x', abi = [], params) => {
 
 const invokeContract = (provider, abi, name, params) => {
   const functionFromAbi = findFunctionFromAbi(abi, 'function', name);
-  console.log(abi);
   const data = methodData(functionFromAbi, params);
   return {
     txData: () => data,
@@ -83,7 +83,10 @@ const invokeContract = (provider, abi, name, params) => {
         gas: get(txPayload, 'gas', 0)
       };
       const result = await api.callSmartContract(callObject);
-      return result;
+      const outputTypes = functionFromAbi.outputs.map(output => output.type);
+      const outputBuffer = new Buffer(result.replace('0x', ''), 'hex');
+      const decodeResult = abiJs.rawDecode(outputTypes, outputBuffer);
+      return decodeResult.map(decode => decode.toString());
     }
   };
 };

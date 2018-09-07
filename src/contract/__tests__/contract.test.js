@@ -90,59 +90,33 @@ describe('Smart contract integration', () => {
       // );
     });
   });
-  // it('abc', async () => {
-  //   const provider = Provider('http://192.168.3.3:8545');
-  //   const abi = [
-  //     {
-  //       constant: true,
-  //       inputs: [{ name: 'toProposal', type: 'uint8' }],
-  //       name: 'getVote',
-  //       outputs: [{ name: '', type: 'uint256' }],
-  //       payable: false,
-  //       stateMutability: 'view',
-  //       type: 'function'
-  //     },
-  //     {
-  //       constant: true,
-  //       inputs: [],
-  //       name: 'winningProposal',
-  //       outputs: [{ name: '_winningProposal', type: 'uint8' }],
-  //       payable: false,
-  //       stateMutability: 'view',
-  //       type: 'function'
-  //     },
-  //     {
-  //       constant: false,
-  //       inputs: [{ name: 'toProposal', type: 'uint8' }],
-  //       name: 'vote',
-  //       outputs: [],
-  //       payable: false,
-  //       stateMutability: 'nonpayable',
-  //       type: 'function'
-  //     }
-  //   ];
-  //   const contract = Contract(provider, '', abi);
-  //   const result = await contract
-  //     // .invoke({ params: [3], name: 'vote' })
-  //     // .send(
-  //     //   '0x049de018e08c3bcd59c1a21f0cf7de8f17fe51f8ce7d9c2120d17b1f0251b265',
-  //     //   '0x00000000000000000000000000000000736d6332',
-  //     //   {
-  //     //     gas: 70000,
-  //     //     gasPrice: 256
-  //     //   }
-  //     // );
-  //     //
-  //     .invoke({ params: [3], name: 'getVote' })
-  //     .call(
-  //       '0xc1fe56E3F58D3244F606306611a5d10c8333f1f6',
-  //       '0x00000000000000000000000000000000736d6332',
-  //       {
-  //         gas: 70000,
-  //         gasPrice: 256
-  //       }
-  //     );
-  //
-  //   console.log(result);
-  // });
+  it.skip('should decode success', async () => {
+    const provider = Provider('http://localhost:8545');
+    const abi = JSON.parse(
+      '[{"constant":true,"inputs":[{"name":"data","type":"uint256"}],"name":"calc","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"v3","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"v1","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"v2","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"_v1","type":"uint256"},{"name":"_v2","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}]'
+    );
+    const contract = Contract(provider, '', abi);
+    const result = await contract
+      // .invoke({ params: [3], name: 'vote' })
+      // .send(
+      //   '0x049de018e08c3bcd59c1a21f0cf7de8f17fe51f8ce7d9c2120d17b1f0251b265',
+      //   '0x00000000000000000000000000000000736d6332',
+      //   {
+      //     gas: 70000,
+      //     gasPrice: 256
+      //   }
+      // );
+      //
+      .invoke({ params: [], name: 'v3' })
+      .call(
+        '0xc1fe56E3F58D3244F606306611a5d10c8333f1f6',
+        '0x910f28f6d960a358D77a650899F84fBa64326d72',
+        {
+          gas: 70000,
+          gasPrice: 256
+        }
+      );
+
+    console.log(result);
+  });
 });

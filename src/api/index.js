@@ -47,7 +47,9 @@ const parseResult = (result, customFormat) => {
     throw new Error(JSON.stringify(result.data));
   }
 };
-
+const sleep = ms => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
 const sendSignedTx = async (
   provider,
   rawTx,
@@ -66,13 +68,20 @@ const sendSignedTx = async (
   const submittedHash = txHash;
 
   const breakTimeout = Date.now() + timeout;
-  while (Date.now < breakTimeout) {
-    const receipt = await defaultMethod(provider, 'tx_getTransaction', always, [
-      submittedHash
-    ]);
-    if (receipt) {
-      return receipt;
-    } else {
+  while (Date.now() < breakTimeout) {
+    try {
+      const receipt = await defaultMethod(
+        provider,
+        'tx_getTransaction',
+        always,
+        [submittedHash]
+      );
+      if (receipt) {
+        return txHash;
+      } else {
+        await sleep(1000);
+      }
+    } catch (err) {
       await sleep(1000);
     }
   }
@@ -94,7 +103,7 @@ export default provider => {
         blockParam
       ]),
     sendSignedTransaction: (rawTx, waitUntilMine = false, timeout) =>
-      sendSignedTx(provider, rawTx, (waitUntilMine = false), timeout),
+      sendSignedTx(provider, rawTx, waitUntilMine, timeout),
     transactionByHash: txHash =>
       defaultMethod(provider, 'tx_getTransaction', always, [txHash]),
     transactionReceipt: txHash =>

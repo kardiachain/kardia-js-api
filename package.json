@@ -1,6 +1,6 @@
 {
   "name": "kardia-tool",
-  "version": "0.0.6-12",
+  "version": "0.0.6",
   "description": "Javascript library to interact with kardia chain",
   "main": "lib/index.js",
   "scripts": {

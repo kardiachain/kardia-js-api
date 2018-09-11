@@ -72,12 +72,12 @@ const sendSignedTx = async (
     try {
       const receipt = await defaultMethod(
         provider,
-        'tx_getTransaction',
+        'tx_getTransactionReceipt',
         always,
         [submittedHash]
       );
       if (receipt) {
-        return txHash;
+        return receipt;
       } else {
         await sleep(1000);
       }

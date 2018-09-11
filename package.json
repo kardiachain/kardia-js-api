@@ -17,7 +17,13 @@
   "babel": {
     "plugins": [
       "transform-object-rest-spread",
-      "transform-runtime",
+      [
+        "transform-runtime",
+        {
+          "polyfill": false,
+          "regenerator": true
+        }
+      ],
       "transform-async-to-generator"
     ],
     "presets": [

@@ -23,8 +23,7 @@
           "polyfill": false,
           "regenerator": true
         }
-      ],
-      "transform-async-to-generator"
+      ]
     ],
     "presets": [
       [

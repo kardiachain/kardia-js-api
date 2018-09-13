@@ -118,7 +118,7 @@ export default provider => {
     validatorList: () => defaultMethod(provider, 'kai_validators'),
     accountNonce: address =>
       defaultMethod(provider, 'account_nonce', always, [address]),
-    callSmartContract: (txObject, blockNum = -1) =>
-      defaultMethod(provider, 'tx_kardiaCall', always, [txObject, blockNum])
+    callSmartContract: txObject =>
+      defaultMethod(provider, 'tx_kardiaCall', always, [txObject])
   };
 };

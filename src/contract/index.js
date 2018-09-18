@@ -53,7 +53,14 @@ const deployContract = (provider, bytecode = '0x', abi = [], params) => {
 
 const invokeContract = (provider, abi, name, params) => {
   const functionFromAbi = findFunctionFromAbi(abi, 'function', name);
-  const data = methodData(functionFromAbi, params);
+  const paramsDecorate = map(params, param => {
+    if (isHexStrict(param)) {
+      return param;
+    } else {
+      return toHex(param);
+    }
+  });
+  const data = methodData(functionFromAbi, paramsDecorate);
   return {
     txData: () => data,
     send: async (privateKey, contractAddress, txPayload = {}) => {

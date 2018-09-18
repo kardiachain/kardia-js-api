@@ -12,11 +12,22 @@ const findFunctionFromAbi = (abi, type = 'function', name = '') => {
   return find(abi, item => item.type === type);
 };
 
+const encodeArray = params =>
+  map(params, param => {
+    if (isHexStrict(param)) {
+      return param;
+    } else {
+      return toHex(param);
+    }
+  });
+
 const deployContract = (provider, bytecode = '0x', abi = [], params) => {
   const constructorAbi = findFunctionFromAbi(abi, 'constructor');
   const decorBycode = '0x' + replace(bytecode, '0x', '');
   const paramsDecorate = map(params, param => {
-    if (isHexStrict(param)) {
+    if (Array.isArray(param)) {
+      return encodeArray(param);
+    } else if (isHexStrict(param)) {
       return param;
     } else {
       return toHex(param);
@@ -54,7 +65,9 @@ const deployContract = (provider, bytecode = '0x', abi = [], params) => {
 const invokeContract = (provider, abi, name, params) => {
   const functionFromAbi = findFunctionFromAbi(abi, 'function', name);
   const paramsDecorate = map(params, param => {
-    if (isHexStrict(param)) {
+    if (Array.isArray(param)) {
+      return encodeArray(param);
+    } else if (isHexStrict(param)) {
       return param;
     } else {
       return toHex(param);

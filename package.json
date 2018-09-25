@@ -12,7 +12,7 @@
     "url": "https://github.com/kardiachain/kardiaTool/issues"
   },
   "author": "Phu Tang <phutanghong@gmail.com>",
-  "license": "MIT",
+  "license": "Apache License 2.0",
   "private": false,
   "babel": {
     "plugins": [

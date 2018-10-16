@@ -11,7 +11,7 @@
 //   payable: Bool
 // }
 import BN from 'bn.js';
-import { toHex } from './utils';
+import { reduce, get } from 'lodash';
 const Bytes = require('./bytes');
 const Nat = require('./nat');
 const keccak256s = require('./hash').keccak256s;
@@ -24,12 +24,12 @@ const encode = (type, value) => {
   } else {
     return {
       data: encodeSingle(type, value),
-      dynamic: isDynamic(type)
+      dynamic: isDynamic(type),
     };
   }
 };
 
-const isDynamic = type => {
+const isDynamic = (type) => {
   if (type === 'bytes' || type === 'string') return true;
   if (isArray(type)) return true;
   return false;
@@ -40,14 +40,14 @@ const deployData = (bytecode, method, params) => {
   let dataBlock = '0x';
   if (params && method) {
     let encodedParams = params.map((param, i) =>
-      encode(method.inputs[i].type, param)
+      encode(method.inputs[i].type, param),
     );
     for (var i = 0; i < encodedParams.length; ++i) {
       if (encodedParams[i].dynamic) {
         var dataLoc = encodedParams.length * 32 + Bytes.length(dataBlock);
         headBlock = Bytes.concat(
           headBlock,
-          Bytes.pad(32, Nat.fromNumber(dataLoc))
+          Bytes.pad(32, Nat.fromNumber(dataLoc)),
         );
         dataBlock = Bytes.concat(dataBlock, encodedParams[i].data);
       } else {
@@ -62,10 +62,10 @@ const deployData = (bytecode, method, params) => {
 //   ABI-encodes the transaction data to call a method.
 const methodData = (method, params) => {
   const methodSig =
-    method.name + '(' + method.inputs.map(i => i.type).join(',') + ')';
+    method.name + '(' + method.inputs.map((i) => i.type).join(',') + ')';
   const methodHash = keccak256s(methodSig).slice(0, 10);
   let encodedParams = params.map((param, i) =>
-    encode(method.inputs[i].type, param)
+    encode(method.inputs[i].type, param),
   );
   var headBlock = '0x';
   let dataBlock = '0x';
@@ -74,7 +74,7 @@ const methodData = (method, params) => {
       var dataLoc = encodedParams.length * 32 + Bytes.length(dataBlock);
       headBlock = Bytes.concat(
         headBlock,
-        Bytes.pad(32, Nat.fromNumber(dataLoc))
+        Bytes.pad(32, Nat.fromNumber(dataLoc)),
       );
       dataBlock = Bytes.concat(dataBlock, encodedParams[i].data);
     } else {
@@ -143,7 +143,7 @@ const encodeSingle = (type, arg) => {
     num = parseNumber(arg);
     if (num.bitLength() > size) {
       throw new Error(
-        'Supplied uint exceeds width: ' + size + ' vs ' + num.bitLength()
+        'Supplied uint exceeds width: ' + size + ' vs ' + num.bitLength(),
       );
     }
 
@@ -163,7 +163,7 @@ const encodeSingle = (type, arg) => {
     num = parseNumber(arg);
     if (num.bitLength() > size) {
       throw new Error(
-        'Supplied int exceeds width: ' + size + ' vs ' + num.bitLength()
+        'Supplied int exceeds width: ' + size + ' vs ' + num.bitLength(),
       );
     }
 
@@ -184,14 +184,14 @@ const encodeSingle = (type, arg) => {
 
     return encodeSingle(
       'int256',
-      parseNumber(arg).mul(new BN(2).pow(new BN(size[1])))
+      parseNumber(arg).mul(new BN(2).pow(new BN(size[1]))),
     );
   }
 
   throw new Error('Unsupported or invalid type: ' + type);
 };
 
-const parseNumber = arg => {
+const parseNumber = (arg) => {
   var type = typeof arg;
   if (type === 'string') {
     if (isHexPrefixed(arg)) {
@@ -209,13 +209,13 @@ const parseNumber = arg => {
   }
 };
 
-const parseTypeNxM = type => {
+const parseTypeNxM = (type) => {
   var tmp = /^\D+(\d+)x(\d+)$/.exec(type);
   return [parseInt(tmp[1], 10), parseInt(tmp[2], 10)];
 };
 
 // Parse N in type[<N>] where "type" can itself be an array type.
-const parseTypeArray = type => {
+const parseTypeArray = (type) => {
   var tmp = type.match(/(.*)\[(.*?)\]$/);
   if (tmp) {
     return tmp[2] === '' ? 'dynamic' : parseInt(tmp[2], 10);
@@ -224,10 +224,10 @@ const parseTypeArray = type => {
 };
 
 // Parse N from type<N>
-const parseTypeN = type => parseInt(/^\D+(\d+)$/.exec(type)[1], 10);
+const parseTypeN = (type) => parseInt(/^\D+(\d+)$/.exec(type)[1], 10);
 
 // Is a type an array?
-const isArray = type => type.lastIndexOf(']') === type.length - 1;
+const isArray = (type) => type.lastIndexOf(']') === type.length - 1;
 
 function isHexPrefixed(str) {
   if (typeof str !== 'string') {
@@ -237,7 +237,23 @@ function isHexPrefixed(str) {
   return str.slice(0, 2) === '0x';
 }
 
-const stripHexPrefix = str => (isHexPrefixed(str) ? str.slice(2) : str);
-const zeros = bytes => Buffer.allocUnsafe(bytes).fill(0);
+const stripHexPrefix = (str) => (isHexPrefixed(str) ? str.slice(2) : str);
+const zeros = (bytes) => Buffer.allocUnsafe(bytes).fill(0);
 
-export { encode, methodData, deployData };
+const decodeOutput = (outputTypes, outputData) => {
+  if (outputTypes.length === 1) {
+    return outputData[0];
+  }
+  return reduce(
+    outputTypes,
+    function(obj, data, index) {
+      const key = get(data, 'name') || index.toString();
+      obj[key] = outputData[index];
+
+      return obj;
+    },
+    {},
+  );
+};
+
+export { encode, methodData, deployData, decodeOutput };

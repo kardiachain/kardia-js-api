@@ -1,19 +1,19 @@
 import { find, replace, get, map } from 'lodash';
 import abiJs from 'ethereumjs-abi';
-import { deployData, methodData } from '../common/lib/abi';
+import { deployData, methodData, decodeOutput } from '../common/lib/abi';
 import { fromPrivate } from '../common/lib/account';
 import { txGenerator, sign, toHex, isHexStrict } from '../common';
 import Api from '../api';
 
 const findFunctionFromAbi = (abi, type = 'function', name = '') => {
   if (type !== 'constructor') {
-    return find(abi, item => item.type === type && item.name === name);
+    return find(abi, (item) => item.type === type && item.name === name);
   }
-  return find(abi, item => item.type === type);
+  return find(abi, (item) => item.type === type);
 };
 
-const encodeArray = params =>
-  map(params, param => {
+const encodeArray = (params) =>
+  map(params, (param) => {
     if (isHexStrict(param)) {
       return param;
     } else {
@@ -24,7 +24,7 @@ const encodeArray = params =>
 const deployContract = (provider, bytecode = '0x', abi = [], params) => {
   const constructorAbi = findFunctionFromAbi(abi, 'constructor');
   const decorBycode = '0x' + replace(bytecode, '0x', '');
-  const paramsDecorate = map(params, param => {
+  const paramsDecorate = map(params, (param) => {
     if (Array.isArray(param)) {
       return encodeArray(param);
     } else if (isHexStrict(param)) {
@@ -49,22 +49,22 @@ const deployContract = (provider, bytecode = '0x', abi = [], params) => {
         get(txPayload, 'nonce', accountNonce),
         get(txPayload, 'gasPrice', gasPrice),
         get(txPayload, 'gas', gas),
-        data
+        data,
       );
       const signedTx = sign(tx, privateKey);
       const result = await api.sendSignedTransaction(
         signedTx.rawTransaction,
-        true
+        true,
       );
       console.log(result);
       return result;
-    }
+    },
   };
 };
 
 const invokeContract = (provider, abi, name, params) => {
   const functionFromAbi = findFunctionFromAbi(abi, 'function', name);
-  const paramsDecorate = map(params, param => {
+  const paramsDecorate = map(params, (param) => {
     if (Array.isArray(param)) {
       return encodeArray(param);
     } else if (isHexStrict(param)) {
@@ -89,12 +89,12 @@ const invokeContract = (provider, abi, name, params) => {
         get(txPayload, 'nonce', accountNonce),
         get(txPayload, 'gasPrice', gasPrice),
         get(txPayload, 'gas', gas),
-        data
+        data,
       );
       const signedTx = sign(tx, privateKey);
       const result = await api.sendSignedTransaction(
         signedTx.rawTransaction,
-        true
+        true,
       );
       return result;
     },
@@ -106,14 +106,15 @@ const invokeContract = (provider, abi, name, params) => {
         data: data,
         value: get(txPayload, 'amount', 0),
         gasPrice: get(txPayload, 'gasPrice', 0),
-        gas: get(txPayload, 'gas', 0)
+        gas: get(txPayload, 'gas', 0),
       };
       const result = await api.callSmartContract(callObject);
-      const outputTypes = functionFromAbi.outputs.map(output => output.type);
+      const outputTypes = functionFromAbi.outputs.map((output) => output.type);
       const outputBuffer = new Buffer(result.replace('0x', ''), 'hex');
       const decodeResult = abiJs.rawDecode(outputTypes, outputBuffer);
-      return decodeResult.map(decode => decode.toString());
-    }
+      const rawOutput = decodeResult.map((decode) => decode.toString());
+      return decodeOutput(outputTypes, rawOutput);
+    },
   };
 };
 
@@ -121,21 +122,21 @@ export default (provider, bytecodes, abi) => {
   let currentByteCode = bytecodes;
   let currentAbi = abi;
   let currentProvider = provider;
-  const updateAbi = abi => {
+  const updateAbi = (abi) => {
     currentAbi = abi;
   };
-  const updateByteCode = bytecodes => {
+  const updateByteCode = (bytecodes) => {
     currentByteCode = bytecodes;
   };
   const info = () => ({
     provider: {
       version: provider.version,
-      baseLink: provider.baseLink
+      baseLink: provider.baseLink,
     },
     byteCode: currentByteCode,
-    abi: currentAbi
+    abi: currentAbi,
   });
-  const deploy = params =>
+  const deploy = (params) =>
     deployContract(currentProvider, currentByteCode, currentAbi, params);
   const invoke = ({ params, name }) =>
     invokeContract(currentProvider, currentAbi, name, params);
@@ -144,6 +145,6 @@ export default (provider, bytecodes, abi) => {
     updateByteCode,
     info,
     deploy,
-    invoke
+    invoke,
   };
 };

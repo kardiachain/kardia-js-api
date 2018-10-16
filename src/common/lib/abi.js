@@ -246,10 +246,9 @@ const decodeOutput = (outputTypes, outputData) => {
   }
   return reduce(
     outputTypes,
-    function(obj, data, index) {
+    (obj, data, index) => {
       const key = get(data, 'name') || index.toString();
       obj[key] = outputData[index];
-
       return obj;
     },
     {},

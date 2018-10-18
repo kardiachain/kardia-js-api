@@ -242,7 +242,8 @@ const zeros = (bytes) => Buffer.allocUnsafe(bytes).fill(0);
 
 const decodeOutput = (outputTypes, outputData) => {
   if (outputTypes.length === 1) {
-    return decodeSingleOutput(outputTypes[0], outputData[0]);
+    const type = get(outputTypes[0], 'type');
+    return decodeSingleOutput(type, outputData[0]);
   }
   return reduce(
     outputTypes,

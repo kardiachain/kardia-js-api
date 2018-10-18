@@ -11,7 +11,7 @@
 //   payable: Bool
 // }
 import BN from 'bn.js';
-import { reduce, get } from 'lodash';
+import { reduce, get, toNumber, map, replace, split, isEmpty } from 'lodash';
 const Bytes = require('./bytes');
 const Nat = require('./nat');
 const keccak256s = require('./hash').keccak256s;
@@ -248,11 +248,36 @@ const decodeOutput = (outputTypes, outputData) => {
     outputTypes,
     (obj, data, index) => {
       const key = get(data, 'name') || index.toString();
-      obj[key] = outputData[index];
+      const type = get(data, 'type');
+      obj[key] = decodeSingleOutput(type, outputData[index]);
       return obj;
     },
     {},
   );
 };
 
-export { encode, methodData, deployData, decodeOutput };
+const decodeSingleOutput = (outputType, outputData) => {
+  if (isEmpty(outputData) || outputData === '0x') {
+    return outputData;
+  }
+  if (isArray(outputType)) {
+    const type = replace(outputType, '[]', '');
+    const arrayData = split(outputData, ',');
+    return map(arrayData, (data) => decodeSingleOutput(type, data));
+  }
+  if (outputType === 'address') {
+    return `0x${replace(outputData, '0x', '')}`;
+  }
+  if (outputType.startsWith('uint') || outputType.startsWith('int')) {
+    return toNumber(outputData);
+  }
+  if (outputType === 'bool') {
+    return outputData == 'true';
+  }
+  if (outputType.startsWith('byte')) {
+    return `0x${replace(outputData, '0x', '')}`;
+  }
+  return outputData;
+};
+
+export { encode, methodData, deployData, decodeOutput, decodeSingleOutput };

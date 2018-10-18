@@ -112,7 +112,12 @@ const invokeContract = (provider, abi, name, params) => {
       const outputTypes = functionFromAbi.outputs.map((output) => output.type);
       const outputBuffer = new Buffer(result.replace('0x', ''), 'hex');
       const decodeResult = abiJs.rawDecode(outputTypes, outputBuffer);
-      const rawOutput = decodeResult.map((decode) => decode.toString());
+      const rawOutput = decodeResult.map((decode, index) => {
+        if (outputTypes[index].startsWith('byte')) {
+          return decode.toString('hex');
+        }
+        return decode.toString();
+      });
       return decodeOutput(functionFromAbi.outputs, rawOutput);
     },
   };

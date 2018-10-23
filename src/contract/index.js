@@ -1,15 +1,29 @@
-import { find, replace, get, map } from 'lodash';
+import { find, replace, get, map, isEmpty, filter } from 'lodash';
 import abiJs from 'ethereumjs-abi';
-import { deployData, methodData, decodeOutput } from '../common/lib/abi';
+import {
+  deployData,
+  methodData,
+  decodeOutput,
+  methodSignature,
+} from '../common/lib/abi';
 import { fromPrivate } from '../common/lib/account';
 import { txGenerator, sign, toHex, isHexStrict } from '../common';
 import Api from '../api';
+import { Exception } from 'handlebars';
 
 const findFunctionFromAbi = (abi, type = 'function', name = '') => {
   if (type !== 'constructor') {
     return find(abi, (item) => item.type === type && item.name === name);
   }
   return find(abi, (item) => item.type === type);
+};
+
+const filterEventFromAbi = (abi) => {
+  const filteredAbi = filter(abi, (item) => item.type === 'event');
+  return map(filteredAbi, (item) => ({
+    signature: methodSignature(item),
+    ...item,
+  }));
 };
 
 const encodeArray = (params) =>
@@ -92,10 +106,15 @@ const invokeContract = (provider, abi, name, params) => {
         data,
       );
       const signedTx = sign(tx, privateKey);
-      const result = await api.sendSignedTransaction(
+      const rawResult = await api.sendSignedTransaction(
         signedTx.rawTransaction,
         true,
       );
+      const events = map(rawResult.logs, (item) => parseEvent(abi, item));
+      const result = {
+        events,
+        ...rawResult,
+      };
       return result;
     },
     call: async (sender, contractAddress, txPayload = {}) => {
@@ -123,6 +142,54 @@ const invokeContract = (provider, abi, name, params) => {
   };
 };
 
+const parseEvent = (currentAbi, eventObject) => {
+  if (isEmpty(currentAbi)) {
+    throw Exception('Abi is require for paser');
+  }
+  const filterEvents = filterEventFromAbi(currentAbi);
+  console.log('filterEvents', filterEvents[0]);
+  const eventAbi = find(
+    filterEvents,
+    (item) => item.signature === eventObject.topics[0],
+  );
+  if (eventAbi) {
+    const notIndexInputs = filter(
+      eventAbi.inputs,
+      (item) => item.indexed === false,
+    );
+    const indexInputs = filter(
+      eventAbi.inputs,
+      (item) => item.indexed === true,
+    );
+    const orderedInputs = [...notIndexInputs, ...indexInputs];
+    const outputTypes = orderedInputs.map((item) => item.type);
+    let outputBuffer = new Buffer(eventObject.data.replace('0x', ''), 'hex');
+    for (let i = 1; i < eventObject.topics.length; i++) {
+      const indexedBuffer = new Buffer(
+        eventObject.topics[i].replace('0x', ''),
+        'hex',
+      );
+      outputBuffer = Buffer.concat([outputBuffer, indexedBuffer]);
+    }
+    const decodeResult = abiJs.rawDecode(outputTypes, outputBuffer);
+    const rawOutput = decodeResult.map((decode, index) => {
+      if (outputTypes[index].startsWith('byte')) {
+        return decode.toString('hex');
+      }
+      return decode.toString();
+    });
+    const decodeObject = decodeOutput(eventAbi.inputs, rawOutput);
+    return {
+      event: {
+        name: eventAbi.name,
+        ...decodeObject,
+      },
+      ...eventObject,
+    };
+  }
+  return eventObject;
+};
+
 export default (provider, bytecodes, abi) => {
   let currentByteCode = bytecodes;
   let currentAbi = abi;
@@ -145,11 +212,13 @@ export default (provider, bytecodes, abi) => {
     deployContract(currentProvider, currentByteCode, currentAbi, params);
   const invoke = ({ params, name }) =>
     invokeContract(currentProvider, currentAbi, name, params);
+  const eventParser = (eventObject) => parseEvent(currentAbi, eventObject);
   return {
     updateAbi,
     updateByteCode,
     info,
     deploy,
     invoke,
+    eventParser,
   };
 };

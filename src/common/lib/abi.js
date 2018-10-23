@@ -57,6 +57,11 @@ const deployData = (bytecode, method, params) => {
   }
   return Bytes.flatten([bytecode, headBlock, dataBlock]);
 };
+const methodSignature = (method) => {
+  const methodSig =
+    method.name + '(' + method.inputs.map((i) => i.type).join(',') + ')';
+  return keccak256s(methodSig);
+};
 
 // (method : Method), [JSType(method.inputs[i].type)] -> Bytes
 //   ABI-encodes the transaction data to call a method.
@@ -281,4 +286,11 @@ const decodeSingleOutput = (outputType, outputData) => {
   return outputData;
 };
 
-export { encode, methodData, deployData, decodeOutput, decodeSingleOutput };
+export {
+  encode,
+  methodData,
+  deployData,
+  decodeOutput,
+  decodeSingleOutput,
+  methodSignature,
+};

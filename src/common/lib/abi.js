@@ -138,7 +138,8 @@ const encodeSingle = (type, arg) => {
       throw new Error('Invalid bytes<N> width: ' + size);
     }
 
-    return setLengthRight(arg, 32);
+    const result = '0x' + setLengthRight(arg, 32).toString('hex');
+    return result;
   } else if (type.startsWith('uint')) {
     size = parseTypeN(type);
     if (size % 8 || size < 8 || size > 256) {
@@ -396,4 +397,5 @@ export {
   decodeOutput,
   decodeSingleOutput,
   methodSignature,
+  encodeSingle,
 };

@@ -1,4 +1,4 @@
-import { methodData, deployData, decodeOutput } from '../lib/abi';
+import { methodData, deployData, decodeOutput, encodeSingle } from '../lib/abi';
 import { toHex } from '../lib/utils';
 
 describe('Encode function', () => {
@@ -190,5 +190,27 @@ describe('Encode function', () => {
       name: 'abc',
       isOpen: true,
     });
+  });
+});
+
+describe('test encode single', () => {
+  it('encode single correctly', () => {
+    const result = encodeSingle(
+      'bytes32',
+      '0x0000000000000000000000000000000000000000000000000000000031304131',
+    );
+    console.log(result);
+    expect(result).toEqual(
+      '0x0000000000000000000000000000000000000000000000000000000031304131',
+    );
+  });
+  it('encode array correctly', () => {
+    const result = encodeSingle('bytes32[]', [
+      '0x0000000000000000000000000000000000000000000000000000000031304131',
+    ]);
+    console.log(result);
+    expect(result).toEqual(
+      '0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000031304131',
+    );
   });
 });

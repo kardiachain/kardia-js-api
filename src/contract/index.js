@@ -128,23 +128,32 @@ const invokeContract = (provider, abi, name, params) => {
         gas: get(txPayload, 'gas', 0),
       };
       const result = await api.callSmartContract(callObject);
-      const outputTypes = functionFromAbi.outputs.map((output) => output.type);
-      const outputBuffer = new Buffer(result.replace('0x', ''), 'hex');
-      const decodeResult = abiJs.rawDecode(outputTypes, outputBuffer);
-      const rawOutput = decodeResult.map((decode, index) => {
-        if (
-          outputTypes[index].startsWith('byte') &&
-          !outputTypes[index].endsWith(']')
-        ) {
-          return decode.toString('hex');
-        }
-        return decode.toString();
-      });
-      return decodeOutput(functionFromAbi.outputs, rawOutput);
+      return parseOutput(functionFromAbi.outputs, result);
     },
   };
 };
 
+export const parseOutput = (outputs, result) => {
+  const outputTypes = outputs.map((output) => output.type);
+  const outputBuffer = new Buffer(result.replace('0x', ''), 'hex');
+  const decodeResult = abiJs.rawDecode(outputTypes, outputBuffer);
+  const rawOutput = decodeResult.map((decode, index) => {
+    if (outputTypes[index].endsWith(']')) {
+      const resultItems = map(decode, (item) => {
+        if (outputTypes[index].startsWith('byte')) {
+          return item.toString('hex');
+        }
+        return item.toString();
+      });
+      return resultItems;
+    }
+    if (outputTypes[index].startsWith('byte')) {
+      return decode.toString('hex');
+    }
+    return decode.toString();
+  });
+  return decodeOutput(outputs, rawOutput);
+};
 const parseEvent = (currentAbi, eventObject) => {
   if (isEmpty(currentAbi)) {
     throw Exception('Abi is require for paser');

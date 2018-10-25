@@ -1,6 +1,30 @@
 import abi from 'ethereumjs-abi';
-import Contract from '../index';
+import Contract, { parseOutput } from '../index';
 
+describe('decode output Object', () => {
+  it('it decode with correct data', () => {
+    const result =
+      '0x000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000313041310000000000000000000000000000000000000000000000000000000031304132000000000000000000000000000000000000000000000000000000000000001175706461746554656163686572496e666f000000000000000000000000000000';
+    const outputs = [
+      {
+        name: 'ids',
+        type: 'bytes32[]',
+      },
+      {
+        name: 'name',
+        type: 'string',
+      },
+    ];
+    const finalResult = parseOutput(outputs, result);
+    expect(finalResult).toEqual({
+      ids: [
+        '0x0000000000000000000000000000000000000000000000000000000031304131',
+        '0x0000000000000000000000000000000000000000000000000000000031304132',
+      ],
+      name: 'updateTeacherInfo',
+    });
+  });
+});
 describe('test decode abi', () => {
   it('parse correct data', () => {
     var a = abi.rawDecode(

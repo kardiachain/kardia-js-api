@@ -138,7 +138,7 @@ const encodeSingle = (type, arg) => {
       throw new Error('Invalid bytes<N> width: ' + size);
     }
 
-    return utils.setLengthRight(arg, 32);
+    return setLengthRight(arg, 32);
   } else if (type.startsWith('uint')) {
     size = parseTypeN(type);
     if (size % 8 || size < 8 || size > 256) {
@@ -244,6 +244,109 @@ function isHexPrefixed(str) {
 
 const stripHexPrefix = (str) => (isHexPrefixed(str) ? str.slice(2) : str);
 const zeros = (bytes) => Buffer.allocUnsafe(bytes).fill(0);
+const setLengthRight = (msg, length) => {
+  return setLength(msg, length, true);
+};
+
+const setLength = (msg, length, right) => {
+  const buf = zeros(length);
+  msg = toBuffer(msg);
+  if (right) {
+    if (msg.length < length) {
+      msg.copy(buf);
+      return buf;
+    }
+    return msg.slice(0, length);
+  } else {
+    if (msg.length < length) {
+      msg.copy(buf, length - msg.length);
+      return buf;
+    }
+    return msg.slice(-length);
+  }
+};
+const padToEven = (value) => {
+  var a = value; // eslint-disable-line
+
+  if (typeof a !== 'string') {
+    throw new Error(
+      `while padding to even, value must be string, is currently ${typeof a}, while padToEven.`,
+    );
+  }
+
+  if (a.length % 2) {
+    a = `0${a}`;
+  }
+
+  return a;
+};
+
+/**
+ * Is the string a hex string.
+ *
+ * @method check if string is hex string of specific length
+ * @param {String} value
+ * @param {Number} length
+ * @returns {Boolean} output the string is a hex string
+ */
+const isHexString = (value, length) => {
+  if (typeof value !== 'string' || !value.match(/^0x[0-9A-Fa-f]*$/)) {
+    return false;
+  }
+
+  if (length && value.length !== 2 + 2 * length) {
+    return false;
+  }
+
+  return true;
+};
+/**
+ * Converts a `Number` into a hex `String`
+ * @param {Number} i
+ * @return {String}
+ */
+const intToHex = (i) => {
+  let hex = i.toString(16); // eslint-disable-line
+
+  return `0x${hex}`;
+};
+
+/**
+ * Converts an `Number` to a `Buffer`
+ * @param {Number} i
+ * @return {Buffer}
+ */
+const intToBuffer = (i) => {
+  const hex = intToHex(i);
+
+  return new Buffer(padToEven(hex.slice(2)), 'hex');
+};
+
+const toBuffer = (v) => {
+  if (!Buffer.isBuffer(v)) {
+    if (Array.isArray(v)) {
+      v = Buffer.from(v);
+    } else if (typeof v === 'string') {
+      if (isHexString(v)) {
+        v = Buffer.from(padToEven(stripHexPrefix(v)), 'hex');
+      } else {
+        v = Buffer.from(v);
+      }
+    } else if (typeof v === 'number') {
+      v = intToBuffer(v);
+    } else if (v === null || v === undefined) {
+      v = Buffer.allocUnsafe(0);
+    } else if (BN.isBN(v)) {
+      v = v.toArrayLike(Buffer);
+    } else if (v.toArray) {
+      // converts a BN to a Buffer
+      v = Buffer.from(v.toArray());
+    } else {
+      throw new Error('invalid type');
+    }
+  }
+  return v;
+};
 
 const decodeOutput = (outputTypes, outputData) => {
   if (outputTypes.length === 1) {

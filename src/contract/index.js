@@ -138,7 +138,7 @@ const invokeContract = (provider, abi, name, params) => {
     call: async (contractAddress, txPayload = {}, blockHeight = 0) => {
       const api = Api(provider);
       const callObject = {
-        from: get(txPayload, 'amount', '0x'),
+        from: get(txPayload, 'from', '0x'),
         to: contractAddress,
         data: data,
         value: get(txPayload, 'amount', 0),

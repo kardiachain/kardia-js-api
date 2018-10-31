@@ -11,6 +11,9 @@ import { txGenerator, sign, toHex, isHexStrict } from '../common';
 import Api from '../api';
 import { Exception } from 'handlebars';
 
+const DEFAULT_GAS = 900000;
+const DEFAULT_GAS_PRICE = 1;
+
 const findFunctionFromAbi = (abi, type = 'function', name = '') => {
   if (type !== 'constructor') {
     return find(abi, (item) => item.type === type && item.name === name);
@@ -35,6 +38,19 @@ const encodeArray = (params) =>
     }
   });
 
+const estimateGasFN = async (txPayload = {}, api, data) => {
+  const txObject = {
+    from: get(txPayload, 'from', '0x'),
+    to: get(txPayload, 'to', '0x'),
+    data,
+    value: get(txPayload, 'value', 0),
+    gasPrice: get(txPayload, 'gasPrice', DEFAULT_GAS_PRICE),
+    gas: get(txPayload, 'gas', DEFAULT_GAS),
+  };
+  const result = await api.estimateGas(txObject);
+  return result;
+};
+
 const deployContract = (provider, bytecode = '0x', abi = [], params) => {
   const constructorAbi = findFunctionFromAbi(abi, 'constructor');
   const decorBycode = '0x' + replace(bytecode, '0x', '');
@@ -50,19 +66,20 @@ const deployContract = (provider, bytecode = '0x', abi = [], params) => {
   const data = deployData(decorBycode, constructorAbi, paramsDecorate);
   return {
     txData: () => data,
+    estimateGas: async (txPayload = {}) => {
+      const api = Api(provider);
+      return await estimateGasFN(txPayload, api, data);
+    },
     send: async (privateKey, txPayload = {}) => {
       const api = Api(provider);
       const senderAccount = fromPrivate(privateKey);
       const accountNonce = await api.accountNonce(senderAccount.address);
-      //TODO call estimate gas if need
-      const gas = '0xff';
-      const gasPrice = '0xff';
       const tx = txGenerator(
         '0x',
         get(txPayload, 'amount', 0),
         get(txPayload, 'nonce', accountNonce),
-        get(txPayload, 'gasPrice', gasPrice),
-        get(txPayload, 'gas', gas),
+        get(txPayload, 'gasPrice', DEFAULT_GAS_PRICE),
+        get(txPayload, 'gas', DEFAULT_GAS),
         data,
       );
       const signedTx = sign(tx, privateKey);
@@ -90,19 +107,20 @@ const invokeContract = (provider, abi, name, params) => {
   const data = methodData(functionFromAbi, paramsDecorate);
   return {
     txData: () => data,
+    estimateGas: async (txPayload = {}) => {
+      const api = Api(provider);
+      return await estimateGasFN(txPayload, api, data);
+    },
     send: async (privateKey, contractAddress, txPayload = {}) => {
       const api = Api(provider);
       const senderAccount = fromPrivate(privateKey);
       const accountNonce = await api.accountNonce(senderAccount.address);
-      //TODO call estimate gas if need
-      const gas = 5000;
-      const gasPrice = '0xff';
       const tx = txGenerator(
         contractAddress,
         get(txPayload, 'amount', 0),
         get(txPayload, 'nonce', accountNonce),
-        get(txPayload, 'gasPrice', gasPrice),
-        get(txPayload, 'gas', gas),
+        get(txPayload, 'gasPrice', DEFAULT_GAS_PRICE),
+        get(txPayload, 'gas', DEFAULT_GAS),
         data,
       );
       const signedTx = sign(tx, privateKey);
@@ -117,17 +135,17 @@ const invokeContract = (provider, abi, name, params) => {
       };
       return result;
     },
-    call: async (sender, contractAddress, txPayload = {}) => {
+    call: async (contractAddress, txPayload = {}, blockHeight = 0) => {
       const api = Api(provider);
       const callObject = {
-        from: sender,
+        from: get(txPayload, 'amount', '0x'),
         to: contractAddress,
         data: data,
         value: get(txPayload, 'amount', 0),
-        gasPrice: get(txPayload, 'gasPrice', 0),
-        gas: get(txPayload, 'gas', 0),
+        gasPrice: get(txPayload, 'gasPrice', DEFAULT_GAS_PRICE),
+        gas: get(txPayload, 'gas', DEFAULT_GAS),
       };
-      const result = await api.callSmartContract(callObject);
+      const result = await api.callSmartContract(callObject, blockHeight);
       return parseOutput(functionFromAbi.outputs, result);
     },
   };
@@ -159,7 +177,6 @@ const parseEvent = (currentAbi, eventObject) => {
     throw Exception('Abi is require for paser');
   }
   const filterEvents = filterEventFromAbi(currentAbi);
-  console.log('filterEvents', filterEvents[0]);
   const eventAbi = find(
     filterEvents,
     (item) => item.signature === eventObject.topics[0],

@@ -1,5 +1,8 @@
 # Welcome to Kardia Javascript API
 
+## Deprecated
+Moved to repository: https://github.com/kardiachain/kardia-js-sdk
+
 ---
 
 Javascript library to interact with Kardia Chain.

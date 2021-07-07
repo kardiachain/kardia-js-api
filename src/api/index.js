@@ -1,17 +1,17 @@
-import { get, flow, isNumber, isUndefined, isEmpty } from 'lodash/fp';
-import { hexToNumber, numberToHex } from '../common';
-import provider from '../common/lib/api';
+import { get, flow, isNumber, isUndefined, isEmpty } from "lodash/fp";
+import { hexToNumber, numberToHex } from "../common";
+import provider from "../common/lib/api";
 
-const always = (value) => value;
+const always = value => value;
 const defaultMethod = async (
   provider,
   methodName,
   customFormat = always,
-  params = [],
+  params = []
 ) => {
   const payload = {
     method: methodName,
-    params,
+    params
   };
   const result = await provider.request(payload);
   return parseResult(result, customFormat);
@@ -19,8 +19,17 @@ const defaultMethod = async (
 
 const getBlockNumber = async (provider, blockNumber) => {
   const payload = {
-    method: 'kai_getBlockByNumber',
-    params: [blockNumber],
+    method: "kai_getBlockByNumber",
+    params: [blockNumber]
+  };
+  const result = await provider.request(payload);
+  return parseResult(result, always);
+};
+
+const getDualBlockNumber = async (provider, blockNumber) => {
+  const payload = {
+    method: "dual_getBlockByNumber",
+    params: [blockNumber]
   };
   const result = await provider.request(payload);
   return parseResult(result, always);
@@ -28,40 +37,40 @@ const getBlockNumber = async (provider, blockNumber) => {
 
 const getBlockByHash = async (provider, blockHash) => {
   const payload = {
-    method: 'kai_getBlockByHash',
-    params: [blockHash],
+    method: "kai_getBlockByHash",
+    params: [blockHash]
   };
   const result = await provider.request(payload);
   return parseResult(result, always);
 };
 
 const parseResult = (result, customFormat) => {
-  if (!isUndefined(get('data.result', result))) {
+  if (!isUndefined(get("data.result", result))) {
     return flow(
-      get('data.result'),
-      customFormat,
+      get("data.result"),
+      customFormat
     )(result);
   } else {
     if (isEmpty(result.data)) {
-      throw new Error('Empty Response');
+      throw new Error("Empty Response");
     }
     throw new Error(JSON.stringify(result.data));
   }
 };
-const sleep = (ms) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = ms => {
+  return new Promise(resolve => setTimeout(resolve, ms));
 };
 const sendSignedTx = async (
   provider,
   rawTx,
   waitUntilMine = false,
-  timeout = 60000,
+  timeout = 60000
 ) => {
   const txHash = await defaultMethod(
     provider,
-    'tx_sendRawTransaction',
+    "tx_sendRawTransaction",
     always,
-    [rawTx],
+    [rawTx]
   );
   if (waitUntilMine === false) {
     return txHash;
@@ -73,9 +82,9 @@ const sendSignedTx = async (
     try {
       const receipt = await defaultMethod(
         provider,
-        'tx_getTransactionReceipt',
+        "tx_getTransactionReceipt",
         always,
-        [submittedHash],
+        [submittedHash]
       );
       if (receipt) {
         return receipt;
@@ -89,42 +98,47 @@ const sendSignedTx = async (
   throw new Error(`Timeout: cannot get receipt after ${timeout}ms`);
 };
 
-export default (provider) => {
+export default provider => {
   return {
-    clientVerion: () => defaultMethod(provider, 'node_nodeName'),
-    peerCount: () => defaultMethod(provider, 'node_peersCount'),
-    votingPower: () => defaultMethod(provider, 'kai_votingPower'),
-    blockNumber: () => defaultMethod(provider, 'kai_blockNumber'),
-    pendingTransaction: () => defaultMethod(provider, 'tx_pendingTransactions'),
-    blockByNumber: (blockNum) => getBlockNumber(provider, blockNum),
-    blockByHash: (blockHash) => getBlockByHash(provider, blockHash),
-    transactionCount: (address, blockParam = 'latest') =>
-      defaultMethod(provider, 'kai_getTransactionCount', hexToNumber, [
+    nodeName: () => defaultMethod(provider, "node_nodeName"),
+    nodeInfo: () => defaultMethod(provider, "node_nodeInfo"),
+    peerCount: () => defaultMethod(provider, "node_peersCount"),
+    peers: () => defaultMethod(provider, "node_peers"),
+    votingPower: () => defaultMethod(provider, "kai_votingPower"),
+    isValidator: () => defaultMethod(provider, "kai_validator"),
+    blockNumber: () => defaultMethod(provider, "kai_blockNumber"),
+    dualBlockNumber: () => defaultMethod(provider, "dual_blockNumber"),
+    pendingTransaction: () => defaultMethod(provider, "tx_pendingTransactions"),
+    blockByNumber: blockNum => getBlockNumber(provider, blockNum),
+    dualBlockByNumber: blockNum => getDualBlockNumber(provider, blockNum),
+    blockByHash: blockHash => getBlockByHash(provider, blockHash),
+    transactionCount: (address, blockParam = "latest") =>
+      defaultMethod(provider, "kai_getTransactionCount", hexToNumber, [
         address,
-        blockParam,
+        blockParam
       ]),
     sendSignedTransaction: (rawTx, waitUntilMine = false, timeout) =>
       sendSignedTx(provider, rawTx, waitUntilMine, timeout),
-    transactionByHash: (txHash) =>
-      defaultMethod(provider, 'tx_getTransaction', always, [txHash]),
-    transactionReceipt: (txHash) =>
-      defaultMethod(provider, 'tx_getTransactionReceipt', always, [txHash]),
-    balance: (address, blockHash = '', blockHeight = -1) =>
-      defaultMethod(provider, 'account_balance', always, [
+    transactionByHash: txHash =>
+      defaultMethod(provider, "tx_getTransaction", always, [txHash]),
+    transactionReceipt: txHash =>
+      defaultMethod(provider, "tx_getTransactionReceipt", always, [txHash]),
+    balance: (address, blockHash = "", blockHeight = -1) =>
+      defaultMethod(provider, "account_balance", always, [
         address,
         blockHash,
-        blockHeight,
+        blockHeight
       ]),
-    currentPower: () => defaultMethod(provider, 'kai_validator'),
-    validatorList: () => defaultMethod(provider, 'kai_validators'),
-    accountNonce: (address) =>
-      defaultMethod(provider, 'account_nonce', always, [address]),
+    currentPower: () => defaultMethod(provider, "kai_validator"),
+    validatorList: () => defaultMethod(provider, "kai_validators"),
+    accountNonce: address =>
+      defaultMethod(provider, "account_nonce", always, [address]),
     callSmartContract: (txObject, blockHeight = 0) =>
-      defaultMethod(provider, 'kai_kardiaCall', always, [
+      defaultMethod(provider, "kai_kardiaCall", always, [
         txObject,
-        blockHeight,
+        blockHeight
       ]),
-    estimateGas: (txObject) =>
-      defaultMethod(provider, 'kai_estimateGas', always, [txObject]),
+    estimateGas: txObject =>
+      defaultMethod(provider, "kai_estimateGas", always, [txObject])
   };
 };
